@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>我们的关系博物馆</title>
+    <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+<body>
+    <div class="container">
+        <header>
+            <div class="header-content">
+                <h1><i class="fas fa-heart heart"></i> 我们的关系博物馆 <i class="fas fa-heart heart"></i></h1>
+                <p>这里收藏着我们每一次的成长、每一次的理解和每一次的心动。每一个记录都是我们爱情故事的独特篇章。</p>
+            </div>
+        </header>
+        
+        <section class="stats">
+            <div class="stat-item">
+                <div class="stat-value" id="total-entries">0</div>
+                <div class="stat-label">总记录数</div>
+            </div>
+            <div class="stat-item">
+                <div class="stat-value" id="conflict-entries">0</div>
+                <div class="stat-label">矛盾解决</div>
+            </div>
+            <div class="stat-item">
+                <div class="stat-value" id="joy-entries">0</div>
+                <div class="stat-label">美好瞬间</div>
+            </div>
+            <div class="stat-item">
+                <div class="stat-value" id="days-together">0</div>
+                <div class="stat-label">在一起天数</div>
+            </div>
+        </section>
+        
+        <section class="add-entry">
+            <h2><i class="fas fa-plus-circle"></i> 添加新记录</h2>
+            <form id="entry-form">
+                <div class="form-group">
+                    <label for="entry-type">记录类型</label>
+                    <select id="entry-type" required>
+                        <option value="">选择类型</option>
+                        <option value="conflict">矛盾与解决</option>
+                        <option value="joy">美好瞬间</option>
+                    </select>
+                </div>
+                
+                <div class="form-group">
+                    <label for="entry-title">标题</label>
+                    <input type="text" id="entry-title" placeholder="例如：关于游戏时间的沟通" required>
+                </div>
+                
+                <div class="form-group">
+                    <label for="entry-content">发生了什么？</label>
+                    <textarea id="entry-content" placeholder="详细描述当时的情况..." required></textarea>
+                </div>
+                
+                <div class="form-group">
+                    <label for="entry-lesson">我们学到了什么？</label>
+                    <textarea id="entry-lesson" placeholder="写下这次经历带来的成长或感悟..." required></textarea>
+                </div>
+                
+                <button type="submit" class="btn">
+                    <i class="fas fa-heart"></i> 保存我们的记忆
+                </button>
+            </form>
+        </section>
+        
+        <section class="entries-container">
+            <h2><i class="fas fa-history"></i> 我们的关系时间线</h2>
+            <div id="entries">
+                <!-- 记录会动态显示在这里 -->
+                <div class="empty-state" id="empty-state">
+                    <i class="fas fa-book-open"></i>
+                    <h3>还没有任何记录</h3>
+                    <p>添加第一条记录，开始建造你们的关系博物馆吧！</p>
+                </div>
+            </div>
+        </section>
+        
+        <footer>
+            <p>用心建造，用爱维护 · 本页面数据保存在您的浏览器本地</p>
+            <p>❤️ 专属杉和焓的爱心空间 ❤️</p>
+        </footer>
+    </div>
+
+    <script src="script.js"></script>
+</body>
+</html>
