@@ -1,144 +1,100 @@
 <!DOCTYPE html>
 <html lang="zh-CN">
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>我们的关系博物馆</title>
     <link rel="stylesheet" href="style.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 </head>
 <body>
     <div class="container">
+        <!-- 登录卡片 -->
         <div id="auth-section" style="max-width: 1000px; margin: 20px auto; background: white; border-radius: 18px; padding: 30px; box-shadow: var(--shadow);">
-    <div style="text-align: center; margin-bottom: 20px;">
-        <i class="fas fa-lock" style="font-size: 3rem; color: var(--primary);"></i>
-        <h2 style="color: var(--secondary); margin-top: 10px;">❤️ 情侣专属空间</h2>
-        <p style="color: #666;">登录后即可与另一半共享所有记录</p>
-    </div>
-    
-    <!-- 登录/注册表单 -->
-    <div id="login-form">
-        <div class="form-group">
-            <label><i class="fas fa-envelope"></i> 邮箱</label>
-            <input type="email" id="email" placeholder="your@email.com" value="test@example.com">
-        </div>
-        <div class="form-group">
-            <label><i class="fas fa-lock"></i> 密码</label>
-            <input type="password" id="password" placeholder="至少6位" value="123456">
-        </div>
-        <button id="login-btn" class="btn" style="margin-bottom: 10px;">
-            <i class="fas fa-sign-in-alt"></i> 登录 / 注册
-        </button>
-        <p style="text-align: center; color: #888; font-size: 0.9rem;">
-            首次登录将自动注册，无需单独注册
-        </p>
-    </div>
-
-    <!-- 情侣配对卡片（登录成功后显示） -->
-    <div id="couple-section" style="display: none;">
-        <hr style="margin: 30px 0; border: none; border-top: 2px dashed #eaeaea;">
-        <div style="text-align: center;">
-            <i class="fas fa-heart" style="color: var(--primary); font-size: 2rem;"></i>
-            <h3 style="color: var(--secondary); margin: 10px 0;">💑 情侣配对</h3>
-            <div id="couple-status"></div>
-            <div id="invite-box" style="margin-top: 20px;">
+            <div style="text-align: center; margin-bottom: 20px;">
+                <i class="fas fa-lock" style="font-size: 3rem; color: var(--primary);"></i>
+                <h2 style="color: var(--secondary); margin-top: 10px;">❤️ 情侣专属空间</h2>
+                <p style="color: #666;">登录后即可与另一半共享所有记录</p>
+            </div>
+            <div id="login-form">
                 <div class="form-group">
-                    <label>邀请码</label>
-                    <input type="text" id="invite-code-input" placeholder="输入另一半的邀请码">
+                    <label><i class="fas fa-envelope"></i> 邮箱</label>
+                    <input type="email" id="email" placeholder="your@email.com" value="test@example.com">
                 </div>
-                <button id="join-couple-btn" class="btn" style="background: var(--success);">
-                    <i class="fas fa-user-friends"></i> 加入情侣组
+                <div class="form-group">
+                    <label><i class="fas fa-lock"></i> 密码</label>
+                    <input type="password" id="password" placeholder="至少6位" value="123456">
+                </div>
+                <button id="login-btn" class="btn" style="margin-bottom: 10px;">
+                    <i class="fas fa-sign-in-alt"></i> 登录 / 注册
                 </button>
-                <button id="create-couple-btn" class="btn" style="background: var(--secondary); margin-top: 10px;">
-                    <i class="fas fa-plus-circle"></i> 创建新情侣组
-                </button>
+                <p style="text-align: center; color: #888; font-size: 0.9rem;">
+                    首次登录将自动注册，无需单独注册
+                </p>
             </div>
         </div>
-    </div>
-</div>
 
-<!-- 网站主内容区（登录成功后显示） -->
-<div id="app-content" style="display: none;">
-    ... 这里是你原有的所有网站内容 ...
-</div>
-        <header>
-            <div class="header-content">
-                <h1><i class="fas fa-heart heart"></i> 我们的关系博物馆 <i class="fas fa-heart heart"></i></h1>
-                <p>这里收藏着我们每一次的成长、每一次的理解和每一次的心动。每一个记录都是我们爱情故事的独特篇章。</p>
-            </div>
-        </header>
-        
-        <section class="stats">
-            <div class="stat-item">
-                <div class="stat-value" id="total-entries">0</div>
-                <div class="stat-label">总记录数</div>
-            </div>
-            <div class="stat-item">
-                <div class="stat-value" id="conflict-entries">0</div>
-                <div class="stat-label">矛盾解决</div>
-            </div>
-            <div class="stat-item">
-                <div class="stat-value" id="joy-entries">0</div>
-                <div class="stat-label">美好瞬间</div>
-            </div>
-            <div class="stat-item">
-                <div class="stat-value" id="days-together">0</div>
-                <div class="stat-label">在一起天数</div>
-            </div>
-        </section>
-        
-        <section class="add-entry">
-            <h2><i class="fas fa-plus-circle"></i> 添加新记录</h2>
-            <form id="entry-form">
-                <div class="form-group">
-                    <label for="entry-type">记录类型</label>
-                    <select id="entry-type" required>
-                        <option value="">选择类型</option>
-                        <option value="conflict">矛盾与解决</option>
-                        <option value="joy">美好瞬间</option>
-                    </select>
-                </div>
-                
-                <div class="form-group">
-                    <label for="entry-title">标题</label>
-                    <input type="text" id="entry-title" placeholder="例如：关于游戏时间的沟通" required>
-                </div>
-                
-                <div class="form-group">
-                    <label for="entry-content">发生了什么？</label>
-                    <textarea id="entry-content" placeholder="详细描述当时的情况..." required></textarea>
-                </div>
-                
-                <div class="form-group">
-                    <label for="entry-lesson">我们学到了什么？</label>
-                    <textarea id="entry-lesson" placeholder="写下这次经历带来的成长或感悟..." required></textarea>
-                </div>
-                
-                <button type="submit" class="btn">
-                    <i class="fas fa-heart"></i> 保存我们的记忆
-                </button>
-            </form>
-        </section>
-        
-        <section class="entries-container">
-            <h2><i class="fas fa-history"></i> 我们的关系时间线</h2>
-            <div id="entries">
-                <!-- 记录会动态显示在这里 -->
-                <div class="empty-state" id="empty-state">
-                    <i class="fas fa-book-open"></i>
-                    <h3>还没有任何记录</h3>
-                    <p>添加第一条记录，开始建造你们的关系博物馆吧！</p>
+        <!-- 主内容区（登录后显示） -->
+        <div id="app-content" style="display: none;">
+            <!-- 情侣配对卡片 -->
+            <div id="couple-section" style="margin-bottom: 30px; background: white; border-radius: 18px; padding: 25px; box-shadow: var(--shadow);">
+                <hr style="margin: 0 0 20px 0; border: none; border-top: 2px dashed #eaeaea;">
+                <div style="text-align: center;">
+                    <i class="fas fa-heart" style="color: var(--primary); font-size: 2rem;"></i>
+                    <h3 style="color: var(--secondary); margin: 10px 0;">💑 情侣配对</h3>
+                    <div id="couple-status"></div>
+                    <div id="invite-box" style="margin-top: 20px;">
+                        <div class="form-group">
+                            <label>邀请码</label>
+                            <input type="text" id="invite-code-input" placeholder="输入另一半的邀请码">
+                        </div>
+                        <button id="join-couple-btn" class="btn" style="background: var(--success); margin-bottom: 10px;">
+                            <i class="fas fa-user-friends"></i> 加入情侣组
+                        </button>
+                        <button id="create-couple-btn" class="btn" style="background: var(--secondary);">
+                            <i class="fas fa-plus-circle"></i> 创建新情侣组
+                        </button>
+                    </div>
                 </div>
             </div>
-        </section>
-        
-        <footer>
-            <p>用心建造，用爱维护 · 数据已加密同步至云端</p>
-            <p>❤️ 专属杉和焓的爱心空间 ❤️</p>
-        </footer>
-    </div>
 
-    <script src="script.js"></script>
-</body>
-</html>
+            <header>
+                <div class="header-content">
+                    <h1><i class="fas fa-heart heart"></i> 我们的关系博物馆 <i class="fas fa-heart heart"></i></h1>
+                    <p>这里收藏着我们每一次的成长、每一次的理解和每一次的心动。每一个记录都是我们爱情故事的独特篇章。</p>
+                </div>
+            </header>
+
+            <section class="stats">
+                <div class="stat-item">
+                    <div class="stat-value" id="total-entries">0</div>
+                    <div class="stat-label">总记录数</div>
+                </div>
+                <div class="stat-item">
+                    <div class="stat-value" id="conflict-entries">0</div>
+                    <div class="stat-label">矛盾解决</div>
+                </div>
+                <div class="stat-item">
+                    <div class="stat-value" id="joy-entries">0</div>
+                    <div class="stat-label">美好瞬间</div>
+                </div>
+                <div class="stat-item">
+                    <div class="stat-value" id="days-together">0</div>
+                    <div class="stat-label">在一起天数</div>
+                </div>
+            </section>
+
+            <section class="add-entry">
+                <h2><i class="fas fa-plus-circle"></i> 添加新记录</h2>
+                <form id="entry-form">
+                    <div class="form-group">
+                        <label for="entry-type">记录类型</label>
+                        <select id="entry-type" required>
+                            <option value="">选择类型</option>
+                            <option value="conflict">矛盾与解决</option>
+                            <option value="joy">美好瞬间</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label for="entry-title">标题</label>

@@ -1,31 +1,28 @@
-// ====================  Supabase 配置（请务必替换！） ====================
-const SUPABASE_URL = 'https://eouvjxrrmqlaufdmfycl.supabase.co/';   // 替换为你的 Project URL
-const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImVvdXZqeHJybXFsYXVmZG1meWNsIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzA3OTE3OTcsImV4cCI6MjA4NjM2Nzc5N30.NkTIY33ps8_8-V8CYHHTN5txC6mrwpwQ25UKfucsYYc';      // 替换为你的 anon public 密钥（完整长串）
+// ==================== Supabase 配置 ====================
+const SUPABASE_URL = 'https://eouvjxrrmqlaufdmfycl.supabase.co';
+const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImVvdXZqeHJybXFsYXVmZG1meWNsIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzA3OTE3OTcsImV4cCI6MjA4NjM2Nzc5N30.NkTIY33ps8_8-V8CYHHTN5txC6mrwpwQ25UKfucsYYc';
 
-// 初始化 Supabase 客户端（注意变量名改为 supabaseClient）
 const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
-// ====================  全局变量 ====================
+// ==================== 全局变量 ====================
 let currentUser = null;
 let currentCoupleId = null;
+let currentStartDate = null;
 
-// ====================  页面加载 ====================
+// ==================== 页面加载 ====================
 document.addEventListener('DOMContentLoaded', async function() {
-    // 先检查是否已登录
     await checkUser();
     
-    // 绑定按钮事件
     document.getElementById('login-btn').addEventListener('click', handleAuth);
     document.getElementById('create-couple-btn').addEventListener('click', createCouple);
     document.getElementById('join-couple-btn').addEventListener('click', joinCouple);
     
-    // 如果已登录，直接加载主界面
     if (currentUser) {
         showApp();
     }
 });
 
-// ====================  用户认证 ====================
+// ==================== 用户认证 ====================
 async function handleAuth() {
     const email = document.getElementById('email').value.trim();
     const password = document.getElementById('password').value;
@@ -35,20 +32,11 @@ async function handleAuth() {
         return;
     }
     
-    // 尝试登录
-    let { data, error } = await supabaseClient.auth.signInWithPassword({
-        email: email,
-        password: password
-    });
+    let { data, error } = await supabaseClient.auth.signInWithPassword({ email, password });
     
-    // 如果登录失败（用户不存在），则自动注册
     if (error) {
         if (error.message.includes('Invalid login credentials')) {
-            // 注册新用户
-            const { data: signUpData, error: signUpError } = await supabaseClient.auth.signUp({
-                email: email,
-                password: password
-            });
+            const { data: signUpData, error: signUpError } = await supabaseClient.auth.signUp({ email, password });
             if (signUpError) {
                 alert('注册失败：' + signUpError.message);
                 return;
@@ -63,14 +51,12 @@ async function handleAuth() {
         currentUser = data.user;
     }
     
-    // 登录成功后，加载情侣信息和主界面
     await loadCoupleInfo();
     showApp();
 }
 
-// ====================  情侣组管理 ====================
+// ==================== 情侣组管理 ====================
 async function loadCoupleInfo() {
-    // 查询当前用户是否已加入情侣组
     const { data: userCouples, error } = await supabaseClient
         .from('user_couples')
         .select('couple_id')
@@ -84,12 +70,13 @@ async function loadCoupleInfo() {
     
     if (userCouples) {
         currentCoupleId = userCouples.couple_id;
-        // 获取情侣组详情
         const { data: couple } = await supabaseClient
             .from('couples')
             .select('*')
             .eq('id', currentCoupleId)
             .single();
+        
+        currentStartDate = couple?.start_date;
         
         document.getElementById('couple-status').innerHTML = `
             <p style="color: var(--success); font-weight: bold;">
@@ -100,6 +87,7 @@ async function loadCoupleInfo() {
         document.getElementById('invite-box').style.display = 'block';
     } else {
         currentCoupleId = null;
+        currentStartDate = null;
         document.getElementById('couple-status').innerHTML = `
             <p style="color: #888;">你还没有加入情侣组，请创建或输入邀请码。</p>
         `;
@@ -110,13 +98,24 @@ async function loadCoupleInfo() {
 async function createCouple() {
     if (!currentUser) return;
     
-    // 创建新情侣组
     const coupleName = prompt('为你们的情侣组起个名字（例如：多多和杉杉）', '我们的情侣组');
     if (!coupleName) return;
     
+    const startDateInput = prompt('请输入你们在一起的第一天（格式：YYYY-MM-DD，例如 2024-01-01）', '2024-01-01');
+    if (!startDateInput) return;
+    
+    const dateRegex = /^\d{4}-\d{2}-\d{2}$/;
+    if (!dateRegex.test(startDateInput)) {
+        alert('日期格式不正确，请使用 YYYY-MM-DD 格式');
+        return;
+    }
+    
     const { data: newCouple, error } = await supabaseClient
         .from('couples')
-        .insert([{ couple_name: coupleName }])
+        .insert([{ 
+            couple_name: coupleName,
+            start_date: startDateInput
+        }])
         .select()
         .single();
     
@@ -125,7 +124,6 @@ async function createCouple() {
         return;
     }
     
-    // 将当前用户关联到此情侣组
     const { error: linkError } = await supabaseClient
         .from('user_couples')
         .insert([{ user_id: currentUser.id, couple_id: newCouple.id }]);
@@ -136,8 +134,10 @@ async function createCouple() {
     }
     
     currentCoupleId = newCouple.id;
+    currentStartDate = newCouple.start_date;
     alert(`🎉 情侣组创建成功！\n邀请码：${newCouple.invite_code}\n快分享给另一半吧！`);
     await loadCoupleInfo();
+    updateDaysTogether();
 }
 
 async function joinCouple() {
@@ -147,10 +147,9 @@ async function joinCouple() {
         return;
     }
     
-    // 查找该邀请码对应的情侣组
     const { data: couple, error } = await supabaseClient
         .from('couples')
-        .select('id')
+        .select('id, start_date')
         .eq('invite_code', inviteCode)
         .maybeSingle();
     
@@ -159,13 +158,11 @@ async function joinCouple() {
         return;
     }
     
-    // 将当前用户关联到此情侣组
     const { error: linkError } = await supabaseClient
         .from('user_couples')
         .insert([{ user_id: currentUser.id, couple_id: couple.id }]);
     
     if (linkError) {
-        // 可能已经加入过了
         if (linkError.message.includes('duplicate key')) {
             alert('你已加入此情侣组');
         } else {
@@ -175,27 +172,27 @@ async function joinCouple() {
     }
     
     currentCoupleId = couple.id;
+    currentStartDate = couple.start_date;
     alert('✅ 成功加入情侣组！');
     await loadCoupleInfo();
+    updateDaysTogether();
 }
 
-// ====================  显示主应用 ====================
+// ==================== 显示主应用 ====================
 function showApp() {
-    // 隐藏登录卡片，显示主内容
     document.getElementById('auth-section').style.display = 'none';
     document.getElementById('app-content').style.display = 'block';
     
-    // 初始化纪念日（请修改为你们的实际日期）
-    window.START_DATE = new Date('2024-01-01');
-    updateDaysTogether();
+    const form = document.getElementById('entry-form');
+    form.removeEventListener('submit', addEntry);
+    form.addEventListener('submit', addEntry);
     
-    // 加载记录并绑定表单提交
     loadEntries();
     updateStats();
-    document.getElementById('entry-form').addEventListener('submit', addEntry);
+    updateDaysTogether();
 }
 
-// ====================  记录操作（Supabase 版） ====================
+// ==================== 记录操作 ====================
 async function addEntry(e) {
     e.preventDefault();
     
@@ -220,11 +217,7 @@ async function addEntry(e) {
         .insert([{
             user_id: currentUser.id,
             couple_id: currentCoupleId,
-            type: type,
-            title: title,
-            content: content,
-            lesson: lesson,
-            record_date: record_date
+            type, title, content, lesson, record_date
         }]);
     
     if (error) {
@@ -233,11 +226,8 @@ async function addEntry(e) {
         return;
     }
     
-    // 重新加载记录和统计
     await loadEntries();
     await updateStats();
-    
-    // 清空表单
     document.getElementById('entry-form').reset();
     alert('✨ 记录已同步到云端！');
 }
@@ -256,13 +246,12 @@ async function loadEntries() {
         return;
     }
     
-    const entriesContainer = document.getElementById('entries');
+    const container = document.getElementById('entries');
     const emptyState = document.getElementById('empty-state');
-    
-    entriesContainer.innerHTML = '';
+    container.innerHTML = '';
     
     if (!entries || entries.length === 0) {
-        entriesContainer.appendChild(emptyState);
+        container.appendChild(emptyState);
         emptyState.style.display = 'block';
         return;
     }
@@ -270,9 +259,9 @@ async function loadEntries() {
     emptyState.style.display = 'none';
     
     entries.forEach(entry => {
-        const entryEl = document.createElement('div');
-        entryEl.className = `entry ${entry.type}`;
-        entryEl.innerHTML = `
+        const el = document.createElement('div');
+        el.className = `entry ${entry.type}`;
+        el.innerHTML = `
             <div class="entry-header">
                 <span class="entry-type type-${entry.type}">
                     ${entry.type === 'conflict' ? '矛盾解决' : '美好瞬间'}
@@ -285,7 +274,7 @@ async function loadEntries() {
                 <strong>我们的成长：</strong> ${escapeHTML(entry.lesson)}
             </div>
         `;
-        entriesContainer.appendChild(entryEl);
+        container.appendChild(el);
     });
 }
 
@@ -311,34 +300,32 @@ async function updateStats() {
     document.getElementById('joy-entries').textContent = joys;
 }
 
-// ====================  辅助函数 ====================
 function formatDate(dateString) {
-    const date = new Date(dateString);
-    const year = date.getFullYear();
-    const month = String(date.getMonth() + 1).padStart(2, '0');
-    const day = String(date.getDate()).padStart(2, '0');
-    return `${year}年${month}月${day}日`;
+    const d = new Date(dateString);
+    const y = d.getFullYear();
+    const m = String(d.getMonth() + 1).padStart(2, '0');
+    const day = String(d.getDate()).padStart(2, '0');
+    return `${y}年${m}月${day}日`;
 }
 
 function escapeHTML(str) {
-    return String(str).replace(/[&<>"]/g, function(c) {
-        return {
-            '&': '&amp;',
-            '<': '&lt;',
-            '>': '&gt;',
-            '"': '&quot;'
-        }[c] || c;
-    });
+    return String(str).replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'})[c] || c);
 }
 
 function updateDaysTogether() {
+    if (!currentStartDate) {
+        document.getElementById('days-together').textContent = '0';
+        return;
+    }
+    const start = new Date(currentStartDate);
     const today = new Date();
-    const diffTime = today - window.START_DATE;
+    start.setHours(0,0,0,0);
+    today.setHours(0,0,0,0);
+    const diffTime = today - start;
     const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
-    document.getElementById('days-together').textContent = diffDays || 0;
+    document.getElementById('days-together').textContent = diffDays > 0 ? diffDays : 0;
 }
 
-// ====================  检查当前登录状态 ====================
 async function checkUser() {
     const { data: { user } } = await supabaseClient.auth.getUser();
     currentUser = user;
