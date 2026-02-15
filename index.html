@@ -10,7 +10,7 @@
 </head>
 <body>
     <div class="container">
-        <!-- 登录卡片 -->
+        <!-- 登录卡片（未登录时显示） -->
         <div id="auth-section" style="max-width: 1000px; margin: 20px auto; background: white; border-radius: 18px; padding: 30px; box-shadow: var(--shadow);">
             <div style="text-align: center; margin-bottom: 20px;">
                 <i class="fas fa-lock" style="font-size: 3rem; color: var(--primary);"></i>
@@ -98,3 +98,40 @@
                     </div>
                     <div class="form-group">
                         <label for="entry-title">标题</label>
+                        <input type="text" id="entry-title" placeholder="例如：关于游戏时间的沟通" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="entry-content">发生了什么？</label>
+                        <textarea id="entry-content" placeholder="详细描述当时的情况..." required></textarea>
+                    </div>
+                    <div class="form-group">
+                        <label for="entry-lesson">我们学到了什么？</label>
+                        <textarea id="entry-lesson" placeholder="写下这次经历带来的成长或感悟..." required></textarea>
+                    </div>
+                    <button type="submit" class="btn">
+                        <i class="fas fa-heart"></i> 保存我们的记忆
+                    </button>
+                </form>
+            </section>
+
+            <section class="entries-container">
+                <h2><i class="fas fa-history"></i> 我们的关系时间线</h2>
+                <div id="entries">
+                    <div class="empty-state" id="empty-state">
+                        <i class="fas fa-book-open"></i>
+                        <h3>还没有任何记录</h3>
+                        <p>添加第一条记录，开始建造你们的关系博物馆吧！</p>
+                    </div>
+                </div>
+            </section>
+
+            <footer>
+                <p>用心建造，用爱维护 · 数据已加密同步至云端</p>
+                <p>❤️ 专属杉和焓的爱心空间 ❤️</p>
+            </footer>
+        </div>
+    </div>
+
+    <script src="script.js"></script>
+</body>
+</html>
