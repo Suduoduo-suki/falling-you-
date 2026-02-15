@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="zh-CN">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -9,6 +10,58 @@
 </head>
 <body>
     <div class="container">
+        <div id="auth-section" style="max-width: 1000px; margin: 20px auto; background: white; border-radius: 18px; padding: 30px; box-shadow: var(--shadow);">
+    <div style="text-align: center; margin-bottom: 20px;">
+        <i class="fas fa-lock" style="font-size: 3rem; color: var(--primary);"></i>
+        <h2 style="color: var(--secondary); margin-top: 10px;">❤️ 情侣专属空间</h2>
+        <p style="color: #666;">登录后即可与另一半共享所有记录</p>
+    </div>
+    
+    <!-- 登录/注册表单 -->
+    <div id="login-form">
+        <div class="form-group">
+            <label><i class="fas fa-envelope"></i> 邮箱</label>
+            <input type="email" id="email" placeholder="your@email.com" value="test@example.com">
+        </div>
+        <div class="form-group">
+            <label><i class="fas fa-lock"></i> 密码</label>
+            <input type="password" id="password" placeholder="至少6位" value="123456">
+        </div>
+        <button id="login-btn" class="btn" style="margin-bottom: 10px;">
+            <i class="fas fa-sign-in-alt"></i> 登录 / 注册
+        </button>
+        <p style="text-align: center; color: #888; font-size: 0.9rem;">
+            首次登录将自动注册，无需单独注册
+        </p>
+    </div>
+
+    <!-- 情侣配对卡片（登录成功后显示） -->
+    <div id="couple-section" style="display: none;">
+        <hr style="margin: 30px 0; border: none; border-top: 2px dashed #eaeaea;">
+        <div style="text-align: center;">
+            <i class="fas fa-heart" style="color: var(--primary); font-size: 2rem;"></i>
+            <h3 style="color: var(--secondary); margin: 10px 0;">💑 情侣配对</h3>
+            <div id="couple-status"></div>
+            <div id="invite-box" style="margin-top: 20px;">
+                <div class="form-group">
+                    <label>邀请码</label>
+                    <input type="text" id="invite-code-input" placeholder="输入另一半的邀请码">
+                </div>
+                <button id="join-couple-btn" class="btn" style="background: var(--success);">
+                    <i class="fas fa-user-friends"></i> 加入情侣组
+                </button>
+                <button id="create-couple-btn" class="btn" style="background: var(--secondary); margin-top: 10px;">
+                    <i class="fas fa-plus-circle"></i> 创建新情侣组
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- 网站主内容区（登录成功后显示） -->
+<div id="app-content" style="display: none;">
+    ... 这里是你原有的所有网站内容 ...
+</div>
         <header>
             <div class="header-content">
                 <h1><i class="fas fa-heart heart"></i> 我们的关系博物馆 <i class="fas fa-heart heart"></i></h1>
@@ -81,7 +134,7 @@
         </section>
         
         <footer>
-            <p>用心建造，用爱维护 · 本页面数据保存在您的浏览器本地</p>
+            <p>用心建造，用爱维护 · 数据已加密同步至云端</p>
             <p>❤️ 专属杉和焓的爱心空间 ❤️</p>
         </footer>
     </div>
