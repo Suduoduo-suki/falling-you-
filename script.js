@@ -1,31 +1,41 @@
-// ====================  Supabase 配置（请务必替换！） ====================
-const SUPABASE_URL = 'https://eouvjxrrmqlaufdmfycl.supabase.co';   // 替换为你的 Project URL
-const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImVvdXZqeHJybXFsYXVmZG1meWNsIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzA3OTE3OTcsImV4cCI6MjA4NjM2Nzc5N30.NkTIY33ps8_8-V8CYHHTN5txC6mrwpwQ25UKfucsYYc';      // 替换为你的 anon public 密钥（完整长串）
+// ==================== Supabase 配置 ====================
+const SUPABASE_URL = 'https://eouvjxrrmqlaufdmfycl.supabase.co';
+const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImVvdXZqeHJybXFsYXVmZG1meWNsIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzA3OTE3OTcsImV4cCI6MjA4NjM2Nzc5N30.NkTIY33ps8_8-V8CYHHTN5txC6mrwpwQ25UKfucsYYc';
 
-// 初始化 Supabase 客户端（注意变量名改为 supabaseClient）
 const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
-// ====================  全局变量 ====================
+// ==================== 全局变量 ====================
 let currentUser = null;
 let currentCoupleId = null;
 
-// ====================  页面加载 ====================
+// ==================== 页面加载 ====================
 document.addEventListener('DOMContentLoaded', async function() {
-    // 先检查是否已登录
-    await checkUser();
-    
     // 绑定按钮事件
     document.getElementById('login-btn').addEventListener('click', handleAuth);
     document.getElementById('create-couple-btn').addEventListener('click', createCouple);
     document.getElementById('join-couple-btn').addEventListener('click', joinCouple);
     
-    // 如果已登录，直接加载主界面
-    if (currentUser) {
-        showApp();
-    }
+    // 检查登录状态（会决定显示登录卡片还是主界面）
+    await checkUser();
 });
 
-// ====================  用户认证 ====================
+// ==================== 检查当前登录状态 ====================
+async function checkUser() {
+    const { data: { user } } = await supabaseClient.auth.getUser();
+    currentUser = user;
+    
+    if (user) {
+        // 已登录：加载情侣信息并显示主界面
+        await loadCoupleInfo();
+        showApp();
+    } else {
+        // 未登录：确保登录卡片可见，主界面隐藏
+        document.getElementById('auth-section').style.display = 'block';
+        document.getElementById('app-content').style.display = 'none';
+    }
+}
+
+// ==================== 用户认证 ====================
 async function handleAuth() {
     const email = document.getElementById('email').value.trim();
     const password = document.getElementById('password').value;
@@ -41,10 +51,9 @@ async function handleAuth() {
         password: password
     });
     
-    // 如果登录失败（用户不存在），则自动注册
     if (error) {
         if (error.message.includes('Invalid login credentials')) {
-            // 注册新用户
+            // 用户不存在，自动注册
             const { data: signUpData, error: signUpError } = await supabaseClient.auth.signUp({
                 email: email,
                 password: password
@@ -63,14 +72,16 @@ async function handleAuth() {
         currentUser = data.user;
     }
     
-    // 登录成功后，加载信息和主界面
+    // 登录成功后，加载情侣信息并显示主界面
     await loadCoupleInfo();
     showApp();
 }
 
-// ====================  组管理 ====================
+// ==================== 情侣组管理 ====================
 async function loadCoupleInfo() {
-    // 查询当前用户是否已加入
+    if (!currentUser) return;
+    
+    // 查询当前用户是否已加入情侣组
     const { data: userCouples, error } = await supabaseClient
         .from('user_couples')
         .select('couple_id')
@@ -78,7 +89,7 @@ async function loadCoupleInfo() {
         .maybeSingle();
     
     if (error) {
-        console.error('查询失败', error);
+        console.error('查询情侣组失败', error);
         return;
     }
     
@@ -110,10 +121,10 @@ async function loadCoupleInfo() {
 async function createCouple() {
     if (!currentUser) return;
     
-    // 创建新情侣组
     const coupleName = prompt('起个名字（例如：多多和杉杉）', '我们');
     if (!coupleName) return;
     
+    // 插入情侣组（只传入必要的 couple_name，其他字段让数据库默认值处理）
     const { data: newCouple, error } = await supabaseClient
         .from('couples')
         .insert([{ couple_name: coupleName }])
@@ -125,7 +136,7 @@ async function createCouple() {
         return;
     }
     
-    // 将当前用户关联到此
+    // 将当前用户关联到此情侣组
     const { error: linkError } = await supabaseClient
         .from('user_couples')
         .insert([{ user_id: currentUser.id, couple_id: newCouple.id }]);
@@ -179,9 +190,8 @@ async function joinCouple() {
     await loadCoupleInfo();
 }
 
-// ====================  显示主应用 ====================
+// ==================== 显示主应用 ====================
 function showApp() {
-    // 隐藏登录卡片，显示主内容
     document.getElementById('auth-section').style.display = 'none';
     document.getElementById('app-content').style.display = 'block';
     
@@ -189,13 +199,16 @@ function showApp() {
     window.START_DATE = new Date('2024-01-01');
     updateDaysTogether();
     
-    // 加载记录并绑定表单提交
+    // 加载记录并绑定表单提交（避免重复绑定）
+    const form = document.getElementById('entry-form');
+    form.removeEventListener('submit', addEntry);
+    form.addEventListener('submit', addEntry);
+    
     loadEntries();
     updateStats();
-    document.getElementById('entry-form').addEventListener('submit', addEntry);
 }
 
-// ====================  记录操作（Supabase 版） ====================
+// ==================== 记录操作 ====================
 async function addEntry(e) {
     e.preventDefault();
     
@@ -311,7 +324,7 @@ async function updateStats() {
     document.getElementById('joy-entries').textContent = joys;
 }
 
-// ====================  辅助函数 ====================
+// ==================== 辅助函数 ====================
 function formatDate(dateString) {
     const date = new Date(dateString);
     const year = date.getFullYear();
@@ -336,13 +349,4 @@ function updateDaysTogether() {
     const diffTime = today - window.START_DATE;
     const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
     document.getElementById('days-together').textContent = diffDays || 0;
-}
-
-// ====================  检查当前登录状态 ====================
-async function checkUser() {
-    const { data: { user } } = await supabaseClient.auth.getUser();
-    currentUser = user;
-    if (user) {
-        await loadCoupleInfo();
-    }
 }
