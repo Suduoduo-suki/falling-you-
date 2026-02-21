@@ -63,14 +63,14 @@ async function handleAuth() {
         currentUser = data.user;
     }
     
-    // 登录成功后，加载情侣信息和主界面
+    // 登录成功后，加载信息和主界面
     await loadCoupleInfo();
     showApp();
 }
 
-// ====================  情侣组管理 ====================
+// ====================  组管理 ====================
 async function loadCoupleInfo() {
-    // 查询当前用户是否已加入情侣组
+    // 查询当前用户是否已加入
     const { data: userCouples, error } = await supabaseClient
         .from('user_couples')
         .select('couple_id')
@@ -78,7 +78,7 @@ async function loadCoupleInfo() {
         .maybeSingle();
     
     if (error) {
-        console.error('查询情侣组失败', error);
+        console.error('查询失败', error);
         return;
     }
     
@@ -93,7 +93,7 @@ async function loadCoupleInfo() {
         
         document.getElementById('couple-status').innerHTML = `
             <p style="color: var(--success); font-weight: bold;">
-                ✅ 已加入情侣组：${couple?.couple_name || '未命名'} <br>
+                ✅ 已加入：${couple?.couple_name || '未命名'} <br>
                 邀请码：<span style="background: #f0f0f0; padding: 5px 10px; border-radius: 8px;">${couple?.invite_code}</span>
             </p>
         `;
@@ -101,7 +101,7 @@ async function loadCoupleInfo() {
     } else {
         currentCoupleId = null;
         document.getElementById('couple-status').innerHTML = `
-            <p style="color: #888;">你还没有加入情侣组，请创建或输入邀请码。</p>
+            <p style="color: #888;">你还没有加入，请创建或输入邀请码。</p>
         `;
         document.getElementById('invite-box').style.display = 'block';
     }
@@ -111,7 +111,7 @@ async function createCouple() {
     if (!currentUser) return;
     
     // 创建新情侣组
-    const coupleName = prompt('为你们的情侣组起个名字（例如：多多和杉杉）', '我们的情侣组');
+    const coupleName = prompt('起个名字（例如：多多和杉杉）', '我们');
     if (!coupleName) return;
     
     const { data: newCouple, error } = await supabaseClient
@@ -125,18 +125,18 @@ async function createCouple() {
         return;
     }
     
-    // 将当前用户关联到此情侣组
+    // 将当前用户关联到此
     const { error: linkError } = await supabaseClient
         .from('user_couples')
         .insert([{ user_id: currentUser.id, couple_id: newCouple.id }]);
     
     if (linkError) {
-        alert('关联情侣组失败：' + linkError.message);
+        alert('关联失败：' + linkError.message);
         return;
     }
     
     currentCoupleId = newCouple.id;
-    alert(`🎉 情侣组创建成功！\n邀请码：${newCouple.invite_code}\n快分享给另一半吧！`);
+    alert(`🎉 创建成功！\n邀请码：${newCouple.invite_code}\n快分享给另一半吧！`);
     await loadCoupleInfo();
 }
 
@@ -159,7 +159,7 @@ async function joinCouple() {
         return;
     }
     
-    // 将当前用户关联到此情侣组
+    // 将当前用户关联到此
     const { error: linkError } = await supabaseClient
         .from('user_couples')
         .insert([{ user_id: currentUser.id, couple_id: couple.id }]);
@@ -167,7 +167,7 @@ async function joinCouple() {
     if (linkError) {
         // 可能已经加入过了
         if (linkError.message.includes('duplicate key')) {
-            alert('你已加入此情侣组');
+            alert('你已加入');
         } else {
             alert('加入失败：' + linkError.message);
         }
@@ -175,7 +175,7 @@ async function joinCouple() {
     }
     
     currentCoupleId = couple.id;
-    alert('✅ 成功加入情侣组！');
+    alert('✅ 成功加入！');
     await loadCoupleInfo();
 }
 
@@ -200,7 +200,7 @@ async function addEntry(e) {
     e.preventDefault();
     
     if (!currentCoupleId) {
-        alert('请先创建或加入情侣组');
+        alert('请先创建或加入');
         return;
     }
     
